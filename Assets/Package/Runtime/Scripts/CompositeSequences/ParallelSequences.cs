@@ -16,16 +16,24 @@ namespace LenixSO.Sequences.Composite
         private List<ISequence> sequences = new();
         private List<ISequence> runningSequences = new();
         private int sequencesLeft;
-
         
         /// <summary>
         /// Create a ParallelSequences with some sequences already on them
         /// </summary>
-        /// <param name="sequences">sequences that will be added</param>
+        /// <param name="startingSequences">sequences that will be added</param>
         public ParallelSequences(params ISequence[] startingSequences)
         {
             for (int i = 0; i < startingSequences.Length; i++)
                 Add(startingSequences[i]);
+        }
+
+        public int count => sequences?.Count ?? 0;
+        public ISequence currentSequence => sequences.Count > 0 ? sequences[0] : null;
+
+        public ISequence this[int id]
+        {
+            get => sequences[id];
+            set => sequences[id] = value;
         }
 
         /// <summary>
@@ -45,6 +53,20 @@ namespace LenixSO.Sequences.Composite
                 runningSequences.Remove(sequence);
             }
         }
+
+        public void Remove(ISequence sequence) => sequences.Remove(sequence);
+
+        /// <summary>
+        /// Clears all sequences from the manager and resets the state.
+        /// </summary>
+        public void Clear()
+        {
+            for (int i = 0; i < sequences.Count; i++)
+                sequences[i].OnFinished -= OnSequenceFinished;
+            sequences.Clear();
+        }
+
+        public bool Contains(ISequence sequence) => sequences.Contains(sequence);
 
         /// <summary>
         /// Starts all sequences in parallel.
@@ -94,16 +116,6 @@ namespace LenixSO.Sequences.Composite
             runningSequences.Clear();
             sequencesLeft = 0;
             OnFinished?.Invoke();
-        }
-
-        /// <summary>
-        /// Clears the list of sequences and removes the event handlers.
-        /// </summary>
-        private void ClearSequence()
-        {
-            for (int i = 0; i < sequences.Count; i++)
-                sequences[i].OnFinished -= OnSequenceFinished;
-            sequences.Clear();
         }
 
         public override string ToString()
