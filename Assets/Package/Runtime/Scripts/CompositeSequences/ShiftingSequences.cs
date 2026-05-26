@@ -11,7 +11,8 @@ namespace LenixSO.Sequences.Composite
         public event Action OnFinished;
         private List<ISequence> sequences = new();
         private int currentId = 0;
-        private bool running = false;
+        public bool running { get; private set; }
+
         public ISequence currentSequence
         {
             get
@@ -52,13 +53,13 @@ namespace LenixSO.Sequences.Composite
         
         public void End()
         {
-            running = false;
             if (currentSequence == null) OnCurrentSequenceFinished();
             else currentSequence?.End();
         }
         
         private void OnCurrentSequenceFinished()
         {
+            running = false;
             currentId = (currentId + 1) % sequences.Count;
             OnFinished?.Invoke();
         }

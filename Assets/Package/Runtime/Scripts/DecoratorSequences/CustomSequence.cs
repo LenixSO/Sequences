@@ -16,7 +16,7 @@ namespace LenixSO.Sequences.Decorator
 
         private Action begin;
         private Action end;
-        private bool started;
+        public bool running { get; private set; }
 
         /// <summary>
         /// Initializes a new sequence where a single action is executed on Begin, followed by finishing the sequence.
@@ -46,8 +46,8 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
-            if (started) return; // Prevent starting if the sequence has already started
-            started = true;
+            if (running) return; // Prevent starting if the sequence has already started
+            running = true;
             begin?.Invoke();
         }
 
@@ -56,7 +56,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void End()
         {
-            if (!(started || ignoreStartedOnEnd)) return; // Prevent ending if the sequence hasn't started
+            if (!(running || ignoreStartedOnEnd)) return; // Prevent ending if the sequence hasn't started
             end?.Invoke();
         }
 
@@ -77,7 +77,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void FinishSequence()
         {
-            started = false;
+            running = false;
             OnFinished?.Invoke();
         }
 

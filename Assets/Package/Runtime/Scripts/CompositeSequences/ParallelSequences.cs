@@ -10,12 +10,13 @@ namespace LenixSO.Sequences.Composite
     public class ParallelSequences : ISequence
     {
         public string name { get; set; }
+        public bool running { get; private set; }
         public event Action OnFinished;
 
         private List<ISequence> sequences = new();
         private List<ISequence> runningSequences = new();
         private int sequencesLeft;
-        private bool running => sequencesLeft > 0;
+
         
         /// <summary>
         /// Create a ParallelSequences with some sequences already on them
@@ -58,7 +59,7 @@ namespace LenixSO.Sequences.Composite
                 sequences[i]?.Begin();
             }
 
-            if(!running) AllSequencesFinished();
+            if (!running) AllSequencesFinished();
         }
 
         /// <summary>
@@ -89,6 +90,7 @@ namespace LenixSO.Sequences.Composite
         /// </summary>
         private void AllSequencesFinished()
         {
+            running = false;
             runningSequences.Clear();
             sequencesLeft = 0;
             OnFinished?.Invoke();

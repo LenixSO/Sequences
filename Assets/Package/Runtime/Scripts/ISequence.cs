@@ -11,6 +11,7 @@ namespace LenixSO.Sequences
     public interface ISequence
     {
         public string name { get; set; }
+        public bool running { get; }
         /// <summary>
         /// Event triggered when the sequence has finished.
         /// </summary>

@@ -8,6 +8,7 @@ namespace LenixSO.Sequences.Decorator
     public class FollowUpSequence : ISequence
     {
         public string name { get; set; }
+        public bool running { get; private set; }
         private ISequence sequence;
         private ISequence followUp;
 
@@ -33,6 +34,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
+            running = true;
             sequence.OnFinished += OnMainSequenceFinished;
             sequence.Begin();
         }
@@ -52,6 +54,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         private void OnMainSequenceFinished()
         {
+            running = false;
             sequence.OnFinished -= OnMainSequenceFinished;
             OnFinished?.Invoke();
             followUp.Begin();
