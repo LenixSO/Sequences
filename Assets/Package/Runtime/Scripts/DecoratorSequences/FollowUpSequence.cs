@@ -35,7 +35,7 @@ namespace LenixSO.Sequences.Decorator
         public void Begin()
         {
             running = true;
-            sequence.OnFinished += OnMainSequenceFinished;
+            sequence.ListenNextFinishedCallback(OnMainSequenceFinished);
             sequence.Begin();
         }
 
@@ -55,9 +55,8 @@ namespace LenixSO.Sequences.Decorator
         private void OnMainSequenceFinished()
         {
             running = false;
-            sequence.OnFinished -= OnMainSequenceFinished;
-            OnFinished?.Invoke();
             followUp.Begin();
+            OnFinished?.Invoke();
         }
 
         public override string ToString()

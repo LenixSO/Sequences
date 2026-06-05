@@ -81,7 +81,7 @@ namespace LenixSO.Sequences.Composite
                 sequences[i]?.Begin();
             }
 
-            if (!running) AllSequencesFinished();
+            if (!running && sequencesLeft >= 0) AllSequencesFinished();
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace LenixSO.Sequences.Composite
         {
             running = false;
             runningSequences.Clear();
-            sequencesLeft = 0;
+            sequencesLeft = -1;
             OnFinished?.Invoke();
         }
 
