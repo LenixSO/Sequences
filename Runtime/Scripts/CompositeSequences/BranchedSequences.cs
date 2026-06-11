@@ -9,6 +9,7 @@ namespace LenixSO.Sequences.Composite
     public class BranchedSequence : ISequence
     {
         public string name { get; set; }
+        public bool running { get; private set; }
         private ISequence mainSequence;
         private ISequence altSequence;
         private Func<bool> contidion;
@@ -39,6 +40,7 @@ namespace LenixSO.Sequences.Composite
         /// </summary>
         public void Begin()
         {
+            running = true;
             currentSequence = contidion?.Invoke() ?? true ? mainSequence : altSequence;
             currentSequence.ListenNextFinishedCallback(OnSequenceEnd);
             currentSequence.Begin();
@@ -54,6 +56,7 @@ namespace LenixSO.Sequences.Composite
         /// </summary>
         private void OnSequenceEnd()
         {
+            running = false;
             currentSequence = null;
             OnFinished?.Invoke();
         }

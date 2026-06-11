@@ -10,6 +10,7 @@ namespace LenixSO.Sequences.Coroutines
     public class CoroutineSequence : ISequence
     {
         public string name { get; set; }
+        public bool running => expandedCoroutine.running;
         private ExpandedCoroutine expandedCoroutine;
         private MonoBehaviour monoBehaviour;
 

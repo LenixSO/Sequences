@@ -18,8 +18,17 @@ namespace LenixSO.Sequences.Composite
         public event Action OnFinished; // Event triggered when all sequences have finished
 
         public bool running { get; private set; } // Indicates if the sequence manager is currently running
-        public int sequenceCount => sequences?.Count ?? 0;
-        public ISequence currentSequence => sequences.Count > 0 ? sequences[current] : null; // Retrieves the current sequence or null if none exists
+        public int count => sequences?.Count ?? 0;
+        public ISequence currentSequence
+        {
+            get => current < sequences.Count ? sequences[current] : null;
+            set
+            {
+                if (running) return;
+                if (current >= sequences.Count) Add(value);
+                else sequences[current] = value;
+            }
+        }
         public ISequence this[int id]
         {
             get => sequences[id];
@@ -53,13 +62,21 @@ namespace LenixSO.Sequences.Composite
         }
 
         /// <summary>
+        /// Inserts a sequence at a specific index in the sequence list.
+        /// </summary>
+        /// <param name="index">The index at which to insert the sequence.</param>
+        /// <param name="sequence">The sequence to insert at the specified index.</param>
+        /// <returns>Returns the current SequenceManager instance for method chaining.</returns>
+        public void Insert(int index, ISequence sequence) => sequences.Insert(index, sequence);
+
+        /// <summary>
         /// Inserts a sequence directly after a target sequence. 
         /// The insert will fail if the target sequence has already been completed.
         /// </summary>
         /// <param name="sequence">The sequence to be inserted after the target sequence.</param>
         /// <param name="afterSequence">The target sequence that the new sequence will be inserted after.</param>
         /// <returns>Returns the current SequenceManager instance for method chaining.</returns>
-        public QueuedSequences InsertAfter(ISequence sequence, ISequence afterSequence)
+        public void InsertAfter(ISequence sequence, ISequence afterSequence)
         {
             int id = sequences.IndexOf(afterSequence); // Find the index of the target sequence
             if (id < 0 || id >= sequences.Count - 1) 
@@ -77,20 +94,22 @@ namespace LenixSO.Sequences.Composite
                 // If the target sequence is still to be executed, insert the new sequence after it
                 sequences.Insert(id + 1, sequence);
             }
-            
-            return this;
         }
-        
+
+        public void RemoveAt(int index) => sequences.RemoveAt(index);
+
         /// <summary>
-        /// Inserts a sequence at a specific index in the sequence list.
+        /// Clears all sequences from the manager and resets the state.
         /// </summary>
-        /// <param name="sequence">The sequence to insert at the specified index.</param>
-        /// <param name="id">The index at which to insert the sequence.</param>
-        /// <returns>Returns the current SequenceManager instance for method chaining.</returns>
-        public QueuedSequences InsertSequence(ISequence sequence, int id)
+        public void Clear()
         {
-            sequences.Insert(id, sequence);
-            return this;
+            if(current >= 0 && current < sequences.Count) 
+            {
+                // Unsubscribe from the current sequence's OnFinished event
+                sequences[current].OnFinished -= GoToNext;
+            }
+            sequences.Clear(); // Clears the sequence list
+            current = 0; // Reset the current sequence index
         }
 
         /// <summary>
@@ -117,20 +136,6 @@ namespace LenixSO.Sequences.Composite
         /// The zero-based index of the last occurrence of the specified sequence if found; otherwise, -1.
         /// </returns>
         public int LastIndexOf(ISequence sequence) => sequences.LastIndexOf(sequence);
-
-        /// <summary>
-        /// Clears all sequences from the manager and resets the state.
-        /// </summary>
-        public void ClearSequence()
-        {
-            if(current >= 0 && current < sequences.Count) 
-            {
-                // Unsubscribe from the current sequence's OnFinished event
-                sequences[current].OnFinished -= GoToNext;
-            }
-            sequences.Clear(); // Clears the sequence list
-            current = 0; // Reset the current sequence index
-        }
 
         /// <summary>
         /// Begins executing the sequences from the start.

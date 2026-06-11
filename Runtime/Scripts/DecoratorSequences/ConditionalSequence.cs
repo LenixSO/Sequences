@@ -8,6 +8,7 @@ namespace LenixSO.Sequences.Decorator
     public class ConditionalSequence : ISequence
     {
         public string name { get; set; }
+        public bool running { get; private set; }
         private Func<bool> condition;
         private ISequence Sequence;
         public event Action OnFinished;
@@ -31,6 +32,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
+            running = true;
             playedSequence = condition?.Invoke() ?? true;
             if (playedSequence) Sequence?.Begin();
             else End();
@@ -51,6 +53,7 @@ namespace LenixSO.Sequences.Decorator
         private void Finish()
         {
             playedSequence = false;
+            running = false;
             OnFinished?.Invoke();
         }
 

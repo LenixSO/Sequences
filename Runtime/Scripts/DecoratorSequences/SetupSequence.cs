@@ -8,6 +8,7 @@ namespace LenixSO.Sequences.Decorator
     public class SetupSequence: ISequence
     {
         public string name { get; set; }
+        public bool running { get; private set; }
         private Action SetupAction;
         private ISequence Sequence;
         public event Action OnFinished;
@@ -29,6 +30,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
+            running = true;
             SetupAction?.Invoke();
             Sequence?.Begin();
         }
@@ -41,7 +43,11 @@ namespace LenixSO.Sequences.Decorator
         /// <summary>
         /// Invoked when the nested sequence finishes, triggers the OnFinished event.
         /// </summary>
-        private void Finish() => OnFinished?.Invoke();
+        private void Finish()
+        {
+            running = false;
+            OnFinished?.Invoke();
+        }
 
         public override string ToString()
         {
