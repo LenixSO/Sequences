@@ -14,7 +14,6 @@ namespace LenixSO.Sequences.Composite
         public event Action OnFinished;
 
         private List<ISequence> sequences = new();
-        private List<ISequence> runningSequences = new();
         private int sequencesLeft;
         
         /// <summary>
@@ -44,14 +43,8 @@ namespace LenixSO.Sequences.Composite
         public ParallelSequences Add(ISequence sequence)
         {
             sequences.Add(sequence);
-            sequence.OnFinished += OnFinishedSequence;
             sequence.OnFinished += OnSequenceFinished;
             return this;
-
-            void OnFinishedSequence()
-            {
-                runningSequences.Remove(sequence);
-            }
         }
 
         public void Remove(ISequence sequence) => sequences.Remove(sequence);
@@ -75,9 +68,9 @@ namespace LenixSO.Sequences.Composite
         {
             if (running) return; // Prevent starting if sequences are already running
             sequencesLeft = sequences.Count;
+            running = sequences.Count > 0;
             for (int i = 0; i < sequences.Count; i++)
             {
-                runningSequences.Add(sequences[i]);
                 sequences[i]?.Begin();
             }
 
@@ -92,7 +85,7 @@ namespace LenixSO.Sequences.Composite
             if (!running) return; // Prevent ending if sequences are not running
             for (int i = 0; i < sequences.Count; i++)
             {
-                if (!runningSequences.Contains(sequences[i])) continue;
+                if (!sequences[i].running) continue;
                 sequences[i]?.End();
             }
         }
@@ -103,7 +96,7 @@ namespace LenixSO.Sequences.Composite
         private void OnSequenceFinished()
         {
             sequencesLeft--;
-            if (running) return; // If there are still sequences running, do nothing
+            if (sequencesLeft > 0) return; // If there are still sequences running, do nothing
             AllSequencesFinished();
         }
 
@@ -113,7 +106,6 @@ namespace LenixSO.Sequences.Composite
         private void AllSequencesFinished()
         {
             running = false;
-            runningSequences.Clear();
             sequencesLeft = -1;
             OnFinished?.Invoke();
         }
