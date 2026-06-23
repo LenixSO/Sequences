@@ -74,15 +74,15 @@ public class SequenceTester : MonoBehaviour
         var node = Instantiate(vCompositeNode, Vector3.zero, Quaternion.identity, parent);
         node.transform.SetAsFirstSibling();
         ParallelSequences sequence = new();
+        node.InjectSequence(sequence);
+        node.Setup(n => sequence.Add(n.nodeSequence), n => sequence.Remove(n.nodeSequence));
         for (int i = 0; i < subnodes; i++)
         {
             float delay = .5f + .5f * i;
             var subnode = GenericNode(delay);
             subnode.Text.SetText(i.ToString());
             node.AddSubnode(subnode);
-            sequence.Add(subnode.nodeSequence);
         }
-        node.InjectSequence(sequence);
         return node;
     }
     #endregion

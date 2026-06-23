@@ -10,10 +10,20 @@ public class CompositeNode : Node
     public RectTransform LayoutGroup => layoutGroup;
     
     public List<Node> subNodes = new();
-    
+
+    private Action<Node> addSequenceMethod;
+    private Action<Node> removeSequenceMethod;
+
+    public void Setup(Action<Node> addSequenceAction, Action<Node> removeSequenceAction)
+    {
+        addSequenceMethod = addSequenceAction;
+        removeSequenceMethod = removeSequenceAction;
+    }
+
     public void AddSubnode(Node subnode)
     {
         subNodes.Add(subnode);
+        addSequenceMethod(subnode);
         subnode.rectTransform.SetParent(layoutGroup);
         subnode.rectTransform.localScale = Vector3.one;
     }
@@ -21,6 +31,7 @@ public class CompositeNode : Node
     public void RemoveSubnode(Node subnode, Transform newParent)
     {
         subNodes.Remove(subnode);
+        removeSequenceMethod(subnode);
         subnode.rectTransform.SetParent(newParent);
         subnode.rectTransform.localScale = Vector3.one;
     }

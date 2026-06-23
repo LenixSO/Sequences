@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
 namespace LenixSO.Sequences.Composite
 {
@@ -43,7 +44,6 @@ namespace LenixSO.Sequences.Composite
         public ParallelSequences Add(ISequence sequence)
         {
             sequences.Add(sequence);
-            sequence.OnFinished += OnSequenceFinished;
             return this;
         }
 
@@ -54,8 +54,6 @@ namespace LenixSO.Sequences.Composite
         /// </summary>
         public void Clear()
         {
-            for (int i = 0; i < sequences.Count; i++)
-                sequences[i].OnFinished -= OnSequenceFinished;
             sequences.Clear();
         }
 
@@ -71,6 +69,7 @@ namespace LenixSO.Sequences.Composite
             running = sequences.Count > 0;
             for (int i = 0; i < sequences.Count; i++)
             {
+                sequences[i].ListenNextFinishedCallback(OnSequenceFinished);
                 sequences[i]?.Begin();
             }
 
