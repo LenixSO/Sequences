@@ -20,8 +20,15 @@ public class SequenceTester : MonoBehaviour
     [SerializeField] private CompositeNode vCompositeNode;
 
     private Node selectorNode;
-    private int currentSelection = 0;
-    private List<Node> nodes = new();
+
+    private int currentSelection
+    {
+        get => selectionTree[^1];
+        set => selectionTree[^1] = value;
+    }
+    private readonly List<Node> nodes = new();
+    private readonly List<int> selectionTree = new() { 0 };
+    private readonly List<List<Node>> nodesTree = new();
 
     private void Awake()
     {
@@ -50,10 +57,10 @@ public class SequenceTester : MonoBehaviour
     }
 
     #region NodeCreation
-    private Node GenericNode(Transform container = null, float delay = 1)
+    private Node GenericNode(float delay = 1)
     {
         if (nodes.Count == 0) CreateSelector();
-        var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, container ?? parent);
+        var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent);
         node.transform.SetAsFirstSibling();
         ISequence genericSequence = new CoroutineSequence(new(() => CoroutineExtensions.DelayCoroutine(delay)));
         node.InjectSequence(genericSequence);
@@ -69,8 +76,9 @@ public class SequenceTester : MonoBehaviour
         for (int i = 0; i < subnodes; i++)
         {
             float delay = .5f + .5f * i;
-            var subnode = GenericNode(node.LayoutGroup, delay);
+            var subnode = GenericNode(delay);
             subnode.Text.SetText(i.ToString());
+            node.AddSubnode(subnode);
             sequence.Add(subnode.nodeSequence);
         }
         node.InjectSequence(sequence);
@@ -85,24 +93,44 @@ public class SequenceTester : MonoBehaviour
         selectorNode.rectTransform.SetAsFirstSibling();
         selectorNode.rectTransform.localScale = Vector3.one * 1.2f;
         selectorNode.SetRunningColor();
+        nodesTree.Add(nodes);
     }
 
     private void OnNavigate(InputAction.CallbackContext context)
     {
-        bool alt = Keyboard.current.shiftKey.isPressed;
         Vector2 direction = context.ReadValue<Vector2>();
+        if (direction == Vector2.zero) return;
         Vector2Int input = new Vector2Int((int)direction.x, (int)direction.y);
+        bool alt = Keyboard.current.shiftKey.isPressed;
 
-        int newIndex = (nodes.Count + currentSelection + input.x) % nodes.Count;
-        Node node = nodes[newIndex];
+        int newIndex = (nodesTree[^1].Count + currentSelection + input.x) % nodesTree[^1].Count;
+        Node node = nodesTree[^1][newIndex];
         if (!alt)
         {
+            if (input.y != 0)
+            {
+                if (input.y < 0 && node is CompositeNode { subNodes: { Count: > 0 } } compositeNode)
+                {
+                    selectionTree.Add(0);
+                    nodesTree.Add(compositeNode.subNodes);
+                    newIndex = 0;
+                    node = compositeNode.subNodes[newIndex];
+                }
+                else if (input.y > 0 && nodesTree is { Count: > 1 })
+                {
+                    selectionTree.RemoveAt(selectionTree.Count - 1);
+                    nodesTree.RemoveAt(nodesTree.Count - 1);
+                    newIndex = currentSelection;
+                    node = nodesTree[^1][newIndex];
+                }
+            }
+
             SelectNode(node, newIndex);
             return;
         }
 
-        Node currentNode = nodes[currentSelection];
-        (nodes[currentSelection], nodes[newIndex]) = (nodes[newIndex], currentNode);
+        Node currentNode = nodesTree[^1][currentSelection];
+        (nodesTree[^1][currentSelection], nodesTree[^1][newIndex]) = (nodesTree[^1][newIndex], currentNode);
         node.transform.SetSiblingIndex(currentNode.transform.GetSiblingIndex());
         CoroutineExtensions.WaitAFrame(() => SelectNode(currentNode, newIndex));
     }
