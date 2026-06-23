@@ -50,18 +50,32 @@ public class SequenceTester : MonoBehaviour
     }
 
     #region NodeCreation
-    private void GenericNode()
+    private Node GenericNode(Transform container = null, float delay = 1)
     {
-        var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent);
-        node.Text.SetText($"{nodes.Count}");
-        node.transform.SetAsFirstSibling();
-        ISequence genericSequence = new CoroutineSequence(new(() => CoroutineExtensions.DelayCoroutine(1)));
-        node.InjectSequence(genericSequence);
         if (nodes.Count == 0) CreateSelector();
-        nodes.Add(node);
-        CoroutineExtensions.WaitAFrame(() => SelectNode(node, nodes.Count - 1));
+        var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, container ?? parent);
+        node.transform.SetAsFirstSibling();
+        ISequence genericSequence = new CoroutineSequence(new(() => CoroutineExtensions.DelayCoroutine(delay)));
+        node.InjectSequence(genericSequence);
+        return node;
     }
-    
+
+    private CompositeNode ParallelNode(int subnodes)
+    {
+        if (nodes.Count == 0) CreateSelector();
+        var node = Instantiate(vCompositeNode, Vector3.zero, Quaternion.identity, parent);
+        node.transform.SetAsFirstSibling();
+        ParallelSequences sequence = new();
+        for (int i = 0; i < subnodes; i++)
+        {
+            float delay = .5f + .5f * i;
+            var subnode = GenericNode(node.LayoutGroup, delay);
+            subnode.Text.SetText(i.ToString());
+            sequence.Add(subnode.nodeSequence);
+        }
+        node.InjectSequence(sequence);
+        return node;
+    }
     #endregion
 
     #region Selector
@@ -96,6 +110,7 @@ public class SequenceTester : MonoBehaviour
     private void SelectNode(Node node, int? newIndex = null)
     {
         selectorNode.transform.position = node.transform.position;
+        selectorNode.rectTransform.localScale = node.transform.lossyScale * 1.2f;
         if (newIndex != null) currentSelection = newIndex.Value;
     }
     #endregion
@@ -108,5 +123,19 @@ public class SequenceTester : MonoBehaviour
             .AddFinishedCallback(() => Debug.Log($"{sequence.name} finished"));
     }
 
-    public static void CreateGenericNode() => instance.GenericNode();
+    public static void CreateGenericNode()
+    {
+        var node = instance.GenericNode();
+        node.Text.SetText($"{instance.nodes.Count}");
+        instance.nodes.Add(node);
+        CoroutineExtensions.WaitAFrame(() => instance.SelectNode(node, instance.nodes.Count - 1));
+    }
+
+    public static void CreateParallelNode(int subnodes)
+    {
+        var node = instance.ParallelNode(subnodes);
+        node.Text.SetText($"P");
+        instance.nodes.Add(node);
+        CoroutineExtensions.WaitAFrame(() => instance.SelectNode(node, instance.nodes.Count - 1));
+    }
 }

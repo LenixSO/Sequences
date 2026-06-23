@@ -214,10 +214,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   image: {fileID: 1004368123709150053}
+  text: {fileID: 7686086995851883436}
   idleColor: {r: 1, g: 1, b: 1, a: 1}
   runningColor: {r: 0.9490196, g: 1, b: 0.4, a: 1}
   finishedColor: {r: 0.41960785, g: 1, b: 0.4, a: 1}
   layoutGroup: {fileID: 5694668175432755533}
+--- !u!114 &7686086995851883436 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1673720410108141366, guid: 026781f9664277c40b066feb17db153e, type: 3}
+  m_PrefabInstance: {fileID: 9047811632491736218}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!224 &8755863484444241050 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 293679336086421504, guid: 026781f9664277c40b066feb17db153e, type: 3}

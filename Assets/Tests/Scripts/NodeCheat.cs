@@ -14,16 +14,20 @@ namespace ModeCheat
 
         private static readonly List<string> nodeTypes = new()
         {
+            "par"
         };
         
         private static void AddCommand(string[] parameters)
         {
             CheatConsole.GetKeyValuePair(parameters,nodeTypes, out string typeName, out int? value);
-            int amount = value ?? 1;
+            int amount = value ?? 0;
             switch (typeName)
             {
+                case "par":
+                    SequenceTester.CreateParallelNode(amount);
+                    return;
                 default:
-                    for (int i = 0; i < amount; i++)
+                    for (int i = 0; i <= amount; i++)
                         SequenceTester.CreateGenericNode();
                     return;
             }
