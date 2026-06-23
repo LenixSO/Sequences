@@ -9,8 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5694668175432755533}
-  - component: {fileID: 2410364098383996667}
   - component: {fileID: 344698289216156369}
+  - component: {fileID: 2410364098383996667}
   m_Layer: 5
   m_Name: Layout
   m_TagString: Untagged
@@ -37,6 +37,20 @@ RectTransform:
   m_AnchoredPosition: {x: 30, y: 0}
   m_SizeDelta: {x: 0, y: 90}
   m_Pivot: {x: 0, y: 0.5}
+--- !u!114 &344698289216156369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2924227659145212607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HorizontalFit: 1
+  m_VerticalFit: 0
 --- !u!114 &2410364098383996667
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -63,20 +77,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 1
---- !u!114 &344698289216156369
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2924227659145212607}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HorizontalFit: 1
-  m_VerticalFit: 0
 --- !u!1001 &9047811632491736218
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -219,6 +219,7 @@ MonoBehaviour:
   runningColor: {r: 0.9490196, g: 1, b: 0.4, a: 1}
   finishedColor: {r: 0.41960785, g: 1, b: 0.4, a: 1}
   layoutGroup: {fileID: 5694668175432755533}
+  subNodes: []
 --- !u!114 &7686086995851883436 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1673720410108141366, guid: 026781f9664277c40b066feb17db153e, type: 3}

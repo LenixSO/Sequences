@@ -23,17 +23,17 @@ public class CompositeNode : Node
     public void AddSubnode(Node subnode)
     {
         subNodes.Add(subnode);
-        addSequenceMethod(subnode);
         subnode.rectTransform.SetParent(layoutGroup);
         subnode.rectTransform.localScale = Vector3.one;
+        addSequenceMethod(subnode);
     }
 
     public void RemoveSubnode(Node subnode, Transform newParent)
     {
         subNodes.Remove(subnode);
-        removeSequenceMethod(subnode);
         subnode.rectTransform.SetParent(newParent);
         subnode.rectTransform.localScale = Vector3.one;
+        removeSequenceMethod(subnode);
     }
 
     public override void ResetNode()
