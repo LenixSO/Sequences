@@ -137,6 +137,7 @@ public class SequenceTester : MonoBehaviour
     {
         if (input.y == 0)
         {
+            if (Mathf.Abs(newIndex - currentSelection) > 1) return;
             Node currentNode = leafNode[currentSelection];
             (leafNode[currentSelection], leafNode[newIndex]) = (leafNode[newIndex], currentNode);
             node.transform.SetSiblingIndex(currentNode.transform.GetSiblingIndex());
@@ -168,8 +169,6 @@ public class SequenceTester : MonoBehaviour
         if (!firstNode) currentSelection--;
         nodesTree.Add(compositeNode.subNodes);
         selectionTree.Add(newIndex);
-        Debug.Log(currentSelection);
-        // node.transform.SetAsFirstSibling();
         CoroutineExtensions.WaitAFrame(() => SelectNode(node));
     }
 
