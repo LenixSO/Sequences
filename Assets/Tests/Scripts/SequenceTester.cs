@@ -1,12 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using InputSystemHelper;
 using LenixSO.Sequences;
 using LenixSO.Sequences.Composite;
 using LenixSO.Sequences.Coroutines;
 using LenixSO.Sequences.Decorator;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Input = InputSystemHelper.Input;
 
 public class SequenceTester : MonoBehaviour
 {
@@ -17,34 +19,86 @@ public class SequenceTester : MonoBehaviour
     [SerializeField] private CompositeNode hCompositeNode;
     [SerializeField] private CompositeNode vCompositeNode;
 
+    private Node selectorNode;
+    private int currentSelection = 0;
     private List<Node> nodes = new();
 
     private void Awake()
     {
         instance = this;
-        // GenericNode();
+        Input.Map("UI").Action("Navigate").performed += OnNavigate;
     }
 
     private void Update()
     {
-        if (Keyboard.current.tabKey.wasPressedThisFrame)
+        if (!Keyboard.current.tabKey.wasPressedThisFrame) return;
+        if (Keyboard.current.shiftKey.isPressed)
         {
-            QueuedSequences queue = new();
-            for (int i = nodes.Count - 1; i >= 0; i--)
+            for (int i = 0; i < nodes.Count; i++)
             {
-                queue.Add(nodes[i].nodeSequence);
+                nodes[i].ResetNode();
             }
-
-            queue.Begin();
+            return;
         }
+        QueuedSequences queue = new();
+        for (int i = 0; i < nodes.Count; i++)
+        {
+            queue.Add(nodes[i].nodeSequence);
+        }
+
+        queue.Begin();
     }
 
+    #region NodeCreation
     private void GenericNode()
     {
         var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent);
-        node.InjectSequence(new CoroutineSequence(new(CoroutineExtensions.DelayCoroutine(2))));
+        node.Text.SetText($"{nodes.Count}");
+        node.transform.SetAsFirstSibling();
+        ISequence genericSequence = new CoroutineSequence(new(() => CoroutineExtensions.DelayCoroutine(1)));
+        node.InjectSequence(genericSequence);
+        if (nodes.Count == 0) CreateSelector();
         nodes.Add(node);
+        CoroutineExtensions.WaitAFrame(() => SelectNode(node, nodes.Count - 1));
     }
+    
+    #endregion
+
+    #region Selector
+    private void CreateSelector()
+    {
+        selectorNode = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent.parent);
+        selectorNode.rectTransform.SetAsFirstSibling();
+        selectorNode.rectTransform.localScale = Vector3.one * 1.2f;
+        selectorNode.SetRunningColor();
+    }
+
+    private void OnNavigate(InputAction.CallbackContext context)
+    {
+        bool alt = Keyboard.current.shiftKey.isPressed;
+        Vector2 direction = context.ReadValue<Vector2>();
+        Vector2Int input = new Vector2Int((int)direction.x, (int)direction.y);
+
+        int newIndex = (nodes.Count + currentSelection + input.x) % nodes.Count;
+        Node node = nodes[newIndex];
+        if (!alt)
+        {
+            SelectNode(node, newIndex);
+            return;
+        }
+
+        Node currentNode = nodes[currentSelection];
+        (nodes[currentSelection], nodes[newIndex]) = (nodes[newIndex], currentNode);
+        node.transform.SetSiblingIndex(currentNode.transform.GetSiblingIndex());
+        CoroutineExtensions.WaitAFrame(() => SelectNode(currentNode, newIndex));
+    }
+
+    private void SelectNode(Node node, int? newIndex = null)
+    {
+        selectorNode.transform.position = node.transform.position;
+        if (newIndex != null) currentSelection = newIndex.Value;
+    }
+    #endregion
 
     public ISequence LogSequence(ISequence sequence)
     {

@@ -9,23 +9,22 @@ namespace ModeCheat
     public static class NodeCheat
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        public static void Register()
-        {
-            CheatConsole.OnSetupDone += Setup;
-        }
+        public static void Register() => CheatConsole.OnSetupDone += Setup;
+        public static void Setup() => CheatConsole.RegisterCommand("add", AddCommand);
 
-        public static void Setup()
+        private static readonly List<string> nodeTypes = new()
         {
-            CheatConsole.RegisterCommand("add", AddCommand);
-        }
-
+        };
+        
         private static void AddCommand(string[] parameters)
         {
-            string typeName = parameters.Length > 0 ? parameters[0] : string.Empty;
+            CheatConsole.GetKeyValuePair(parameters,nodeTypes, out string typeName, out int? value);
+            int amount = value ?? 1;
             switch (typeName)
             {
                 default:
-                    SequenceTester.CreateGenericNode();
+                    for (int i = 0; i < amount; i++)
+                        SequenceTester.CreateGenericNode();
                     return;
             }
         }

@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using LenixSO.Sequences;
+using UnityEngine;
 
 public class CompositeNode : Node
 {

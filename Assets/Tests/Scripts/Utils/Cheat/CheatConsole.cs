@@ -170,7 +170,7 @@ namespace Cheat
             knownCommands[command] += callback;
         }
         
-        private static void GetKeyValuePair(string[] parameters, List<string> keyLookUp, out string key, out int? value)
+        public static void GetKeyValuePair(string[] parameters, List<string> keyLookUp, out string key, out int? value)
         {
             key = string.Empty;
             value = null;

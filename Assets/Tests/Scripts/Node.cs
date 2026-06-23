@@ -1,11 +1,13 @@
 using LenixSO.Sequences;
 using LenixSO.Sequences.Decorator;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class Node : MonoBehaviour
 {
     [SerializeField] protected Image image;
+    [SerializeField] protected TMP_Text text;
     [Header("Colors")]
     [SerializeField] protected Color idleColor;
     [SerializeField] protected Color runningColor;
@@ -24,6 +26,8 @@ public class Node : MonoBehaviour
     }
 
     public ISequence nodeSequence { get; protected set; }
+
+    public TMP_Text Text => text;
 
     private void Awake()
     {
