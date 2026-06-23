@@ -24,4 +24,11 @@ public class CompositeNode : Node
         subnode.rectTransform.SetParent(newParent);
         subnode.rectTransform.localScale = Vector3.one;
     }
+
+    public override void ResetNode()
+    {
+        base.ResetNode();
+        for (int i = 0; i < subNodes.Count; i++)
+            subNodes[i].ResetNode();
+    }
 }

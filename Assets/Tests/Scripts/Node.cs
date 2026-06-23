@@ -46,7 +46,7 @@ public class Node : MonoBehaviour
     public void SetRunningColor() => image.color = runningColor;
     public void SetFinishedColor() => image.color = finishedColor;
 
-    public void ResetNode()
+    public virtual void ResetNode()
     {
         SetIdleColor();
     }

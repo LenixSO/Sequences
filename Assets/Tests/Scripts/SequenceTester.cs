@@ -29,6 +29,7 @@ public class SequenceTester : MonoBehaviour
     private readonly List<Node> nodes = new();
     private readonly List<int> selectionTree = new() { 0 };
     private readonly List<List<Node>> nodesTree = new();
+    private List<Node> leafNode => nodesTree[^1];
 
     private void Awake()
     {
@@ -103,36 +104,73 @@ public class SequenceTester : MonoBehaviour
         Vector2Int input = new Vector2Int((int)direction.x, (int)direction.y);
         bool alt = Keyboard.current.shiftKey.isPressed;
 
-        int newIndex = (nodesTree[^1].Count + currentSelection + input.x) % nodesTree[^1].Count;
-        Node node = nodesTree[^1][newIndex];
-        if (!alt)
-        {
-            if (input.y != 0)
-            {
-                if (input.y < 0 && node is CompositeNode { subNodes: { Count: > 0 } } compositeNode)
-                {
-                    selectionTree.Add(0);
-                    nodesTree.Add(compositeNode.subNodes);
-                    newIndex = 0;
-                    node = compositeNode.subNodes[newIndex];
-                }
-                else if (input.y > 0 && nodesTree is { Count: > 1 })
-                {
-                    selectionTree.RemoveAt(selectionTree.Count - 1);
-                    nodesTree.RemoveAt(nodesTree.Count - 1);
-                    newIndex = currentSelection;
-                    node = nodesTree[^1][newIndex];
-                }
-            }
+        int newIndex = (leafNode.Count + currentSelection + input.x) % leafNode.Count;
+        Node node = leafNode[newIndex];
+        if (alt) MoveNode(input, node, newIndex);
+        else MoveSelection(input, node, newIndex);
+    }
 
-            SelectNode(node, newIndex);
+    private void MoveSelection(Vector2Int input, Node node, int newIndex)
+    {
+        if (input.y != 0)
+        {
+            if (input.y < 0 && node is CompositeNode { subNodes: { Count: > 0 } } compositeNode)
+            {
+                selectionTree.Add(0);
+                nodesTree.Add(compositeNode.subNodes);
+                newIndex = 0;
+                node = compositeNode.subNodes[newIndex];
+            }
+            else if (input.y > 0 && nodesTree is { Count: > 1 })
+            {
+                selectionTree.RemoveAt(selectionTree.Count - 1);
+                nodesTree.RemoveAt(nodesTree.Count - 1);
+                newIndex = currentSelection;
+                node = leafNode[newIndex];
+            }
+        }
+
+        SelectNode(node, newIndex);
+    }
+
+    private void MoveNode(Vector2Int input, Node node, int newIndex)
+    {
+        if (input.y == 0)
+        {
+            Node currentNode = leafNode[currentSelection];
+            (leafNode[currentSelection], leafNode[newIndex]) = (leafNode[newIndex], currentNode);
+            node.transform.SetSiblingIndex(currentNode.transform.GetSiblingIndex());
+            CoroutineExtensions.WaitAFrame(() => SelectNode(currentNode, newIndex));
             return;
         }
 
-        Node currentNode = nodesTree[^1][currentSelection];
-        (nodesTree[^1][currentSelection], nodesTree[^1][newIndex]) = (nodesTree[^1][newIndex], currentNode);
-        node.transform.SetSiblingIndex(currentNode.transform.GetSiblingIndex());
-        CoroutineExtensions.WaitAFrame(() => SelectNode(currentNode, newIndex));
+        if (input.y > 0)
+        {
+            //remove from composite and add to parent
+            return;
+        }
+
+        bool firstNode = newIndex == 0;
+        Node targetNode = !firstNode ? leafNode[newIndex - 1] : null;
+        if (targetNode == null) targetNode = newIndex < leafNode.Count - 1 ? leafNode[newIndex + 1] : null;
+        if (targetNode is not CompositeNode compositeNode) return;
+        //add to composite
+        if (nodesTree.Count < 2) leafNode.Remove(node);
+        else
+        {
+            //check once nested composite becomes available
+            var parentNode = nodesTree[^2][selectionTree[^2]] as CompositeNode;
+            parentNode?.RemoveSubnode(node, compositeNode.LayoutGroup);
+        }
+
+        newIndex = compositeNode.subNodes.Count;
+        compositeNode.AddSubnode(node);
+        if (!firstNode) currentSelection--;
+        nodesTree.Add(compositeNode.subNodes);
+        selectionTree.Add(newIndex);
+        Debug.Log(currentSelection);
+        // node.transform.SetAsFirstSibling();
+        CoroutineExtensions.WaitAFrame(() => SelectNode(node));
     }
 
     private void SelectNode(Node node, int? newIndex = null)
