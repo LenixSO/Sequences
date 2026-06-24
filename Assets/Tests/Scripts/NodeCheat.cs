@@ -14,7 +14,8 @@ namespace ModeCheat
 
         private static readonly List<string> nodeTypes = new()
         {
-            "par"
+            "par",
+            "que",
         };
         
         private static void AddCommand(string[] parameters)
@@ -25,6 +26,9 @@ namespace ModeCheat
             {
                 case "par":
                     SequenceTester.CreateParallelNode(amount);
+                    return;
+                case "que":
+                    SequenceTester.CreateQueuedNode(amount);
                     return;
                 default:
                     for (int i = 0; i <= amount; i++)

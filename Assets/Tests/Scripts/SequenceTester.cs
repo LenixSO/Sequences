@@ -35,6 +35,12 @@ public class SequenceTester : MonoBehaviour
     {
         instance = this;
         Input.Map("UI").Action("Navigate").performed += OnNavigate;
+        CreateGenericNode();
+        CreateQueuedNode(3);
+        CreateParallelNode(2);
+        CreateGenericNode();
+        CoroutineExtensions.AwaitCoroutine(CoroutineExtensions.DelayCoroutine(.02f),
+            () => SelectNode(nodes[0], 0));
     }
 
     private void Update()
@@ -73,9 +79,14 @@ public class SequenceTester : MonoBehaviour
         if (nodes.Count == 0) CreateSelector();
         var node = Instantiate(vCompositeNode, Vector3.zero, Quaternion.identity, parent);
         node.transform.SetAsFirstSibling();
-        ParallelSequences sequence = new();
-        node.InjectSequence(sequence);
-        node.Setup(n => sequence.Add(n.nodeSequence), n => sequence.Remove(n.nodeSequence));
+        node.InjectSequence(CustomSequence.EmptySequence());
+        node.Setup(() =>
+        {
+            ParallelSequences sequence = new();
+            for (int i = 0; i < node.subNodes.Count; i++)
+                sequence.Add(node.subNodes[i].nodeSequence);
+            return sequence;
+        });
         for (int i = 0; i < subnodes; i++)
         {
             float delay = .5f + .5f * i;
@@ -92,16 +103,14 @@ public class SequenceTester : MonoBehaviour
         var node = Instantiate(hCompositeNode, Vector3.zero, Quaternion.identity, parent);
         node.transform.SetAsFirstSibling();
         float baseWidth = nodePrefab.rectTransform.sizeDelta.x * node.LayoutGroup.localScale.x;
-        QueuedSequences sequence = new();
-        node.InjectSequence(sequence);
-        node.Setup(n =>
+        node.OnSubnodeChanged += ResizeNode;
+        node.InjectSequence(CustomSequence.EmptySequence());
+        node.Setup(() =>
         {
-            sequence.Add(n.nodeSequence);
-            ResizeNode();
-        }, n =>
-        {
-            sequence.RemoveAt(sequence.IndexOf(n.nodeSequence));
-            ResizeNode();
+            QueuedSequences sequence = new();
+            for (int i = 0; i < node.subNodes.Count; i++)
+                sequence.Add(node.subNodes[i].nodeSequence);
+            return sequence;
         });
         for (int i = 0; i < subnodes; i++)
         {
@@ -114,11 +123,10 @@ public class SequenceTester : MonoBehaviour
         void ResizeNode()
         {
             float subWidth = Mathf.Max(baseWidth * node.subNodes.Count, baseWidth);
-            subWidth += 30 + 20;//30 at begining, X at end
+            subWidth += 110 + 10;//30 at begining, X at end
             var size = node.rectTransform.sizeDelta;
             size.x = subWidth;
             node.rectTransform.sizeDelta = size;
-            node.subNodes[^1].transform.SetAsFirstSibling();
         }
     }
     #endregion
@@ -188,8 +196,19 @@ public class SequenceTester : MonoBehaviour
             {
                 //still needs to check for parent of parent!!!!!!
                 parentNode.RemoveSubnode(node, parent);
-                nodes.Insert(selectionTree[^2]+1, node);
-                node.transform.SetSiblingIndex(parentNode.transform.GetSiblingIndex());
+                if (nodesTree.Count < 3)
+                {
+                    nodes.Insert(selectionTree[^2] + 1, node);
+                    node.transform.SetSiblingIndex(parentNode.transform.GetSiblingIndex());
+                }
+                else
+                {
+                    var grandparent = nodesTree[^3][selectionTree[^3]] as CompositeNode;
+                    grandparent!.AddSubnode(node);
+                    grandparent.subNodes.Insert(selectionTree[^2] + 1, node);
+                    grandparent.subNodes.RemoveAt(grandparent.subNodes.Count - 1);
+                    node.transform.SetSiblingIndex(parentNode.transform.GetSiblingIndex() - 1);
+                }
             }
             selectionTree.RemoveAt(selectionTree.Count - 1);
             nodesTree.RemoveAt(nodesTree.Count - 1);
@@ -225,8 +244,20 @@ public class SequenceTester : MonoBehaviour
         selectorNode.rectTransform.localScale = node.transform.lossyScale * 1.5f;
         selectorNode.rectTransform.sizeDelta = node.rectTransform.sizeDelta;
         if (newIndex != null) currentSelection = newIndex.Value;
+        CoroutineExtensions.WaitAFrame(Canvas.ForceUpdateCanvases);
     }
     #endregion
+
+    private void AddNode(Node node)
+    {
+        if (nodesTree.Count < 2) nodes.Add(node);
+        else
+        {
+            var compositeNode = nodesTree[^2][selectionTree[^2]] as CompositeNode;
+            compositeNode?.AddSubnode(node);
+        }
+        CoroutineExtensions.WaitAFrame(() => SelectNode(node, leafNodes.Count - 1));
+    }
 
     public ISequence LogSequence(ISequence sequence)
     {
@@ -239,24 +270,21 @@ public class SequenceTester : MonoBehaviour
     public static void CreateGenericNode()
     {
         var node = instance.GenericNode();
-        node.Text.SetText($"{instance.nodes.Count}");
-        instance.nodes.Add(node);
-        CoroutineExtensions.WaitAFrame(() => instance.SelectNode(node, instance.nodes.Count - 1));
+        node.Text.SetText($"{instance.leafNodes.Count}");
+        instance.AddNode(node);
     }
 
     public static void CreateParallelNode(int subnodes)
     {
         var node = instance.ParallelNode(subnodes);
         node.Text.SetText($"P");
-        instance.nodes.Add(node);
-        CoroutineExtensions.WaitAFrame(() => instance.SelectNode(node, instance.nodes.Count - 1));
+        instance.AddNode(node);
     }
     
     public static void CreateQueuedNode(int subnodes)
     {
         var node = instance.QueuedNode(subnodes);
         node.Text.SetText($"Q");
-        instance.nodes.Add(node);
-        CoroutineExtensions.WaitAFrame(() => instance.SelectNode(node, instance.nodes.Count - 1));
+        instance.AddNode(node);
     }
 }

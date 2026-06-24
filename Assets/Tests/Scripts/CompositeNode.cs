@@ -1,31 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using LenixSO.Sequences;
+using LenixSO.Sequences.Decorator;
 using UnityEngine;
 
 public class CompositeNode : Node
 {
     [SerializeField] private RectTransform layoutGroup;
+
+    public int minNodes = 0;
+    public int maxNodes = 10;
     
     public RectTransform LayoutGroup => layoutGroup;
+
+    public override ISequence nodeSequence
+    {
+        get
+        {
+            bool canConstruct = subNodes.Count >= minNodes;
+            canConstruct &= sequenceConstructor != null;
+            return InjectSequence(canConstruct ? sequenceConstructor() : backupSequence);
+        }
+        protected set => backupSequence = value;
+    }
+
+    public event Action OnSubnodeChanged;
     
+    private ISequence backupSequence;
+
     public List<Node> subNodes = new();
 
-    private Action<Node> addSequenceMethod;
-    private Action<Node> removeSequenceMethod;
+    private Func<ISequence> sequenceConstructor;
 
-    public void Setup(Action<Node> addSequenceAction, Action<Node> removeSequenceAction)
+    public void Setup(Func<ISequence> nodeSequenceFactory)
     {
-        addSequenceMethod = addSequenceAction;
-        removeSequenceMethod = removeSequenceAction;
+        sequenceConstructor = nodeSequenceFactory;
     }
 
     public void AddSubnode(Node subnode)
     {
         subNodes.Add(subnode);
         subnode.rectTransform.SetParent(layoutGroup);
+        subnode.transform.SetAsFirstSibling();
         subnode.rectTransform.localScale = Vector3.one;
-        addSequenceMethod(subnode);
+        OnSubnodeChanged?.Invoke();
     }
 
     public void RemoveSubnode(Node subnode, Transform newParent)
@@ -33,7 +51,7 @@ public class CompositeNode : Node
         subNodes.Remove(subnode);
         subnode.rectTransform.SetParent(newParent);
         subnode.rectTransform.localScale = Vector3.one;
-        removeSequenceMethod(subnode);
+        OnSubnodeChanged?.Invoke();
     }
 
     public override void ResetNode()

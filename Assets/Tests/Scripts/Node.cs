@@ -25,7 +25,7 @@ public class Node : MonoBehaviour
         }
     }
 
-    public ISequence nodeSequence { get; protected set; }
+    public virtual ISequence nodeSequence { get; protected set; }
 
     public TMP_Text Text => text;
 
