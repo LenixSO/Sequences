@@ -8,13 +8,14 @@ using LenixSO.Sequences.Coroutines;
 using LenixSO.Sequences.Decorator;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using Input = InputSystemHelper.Input;
 
 public class SequenceTester : MonoBehaviour
 {
     private static SequenceTester instance;
     
-    [SerializeField] private Transform parent;
+    [SerializeField] private LayoutGroup parent;
     [SerializeField] private Node nodePrefab;
     [SerializeField] private CompositeNode hCompositeNode;
     [SerializeField] private CompositeNode vCompositeNode;
@@ -67,58 +68,27 @@ public class SequenceTester : MonoBehaviour
     private Node GenericNode(float delay = 1)
     {
         if (nodes.Count == 0) CreateSelector();
-        var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent);
+        var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent.transform);
         node.transform.SetAsFirstSibling();
         ISequence genericSequence = new CoroutineSequence(new(() => CoroutineExtensions.DelayCoroutine(delay)));
         node.InjectSequence(genericSequence);
         return node;
     }
 
-    private CompositeNode ParallelNode(int subnodes)
+    private CompositeNode BaseCompositeNode(CompositeNode prefab)
     {
         if (nodes.Count == 0) CreateSelector();
-        var node = Instantiate(vCompositeNode, Vector3.zero, Quaternion.identity, parent);
+        var node = Instantiate(prefab, Vector3.zero, Quaternion.identity, parent.transform);
         node.transform.SetAsFirstSibling();
         node.InjectSequence(CustomSequence.EmptySequence());
-        node.Setup(() =>
-        {
-            ParallelSequences sequence = new();
-            for (int i = 0; i < node.subNodes.Count; i++)
-                sequence.Add(node.subNodes[i].nodeSequence);
-            return sequence;
-        });
-        for (int i = 0; i < subnodes; i++)
-        {
-            float delay = .5f + .5f * i;
-            var subnode = GenericNode(delay);
-            subnode.Text.SetText(i.ToString());
-            node.AddSubnode(subnode);
-        }
         return node;
     }
 
-    private CompositeNode QueuedNode(int subnodes)
+    private CompositeNode HorizontalNode()
     {
-        if (nodes.Count == 0) CreateSelector();
-        var node = Instantiate(hCompositeNode, Vector3.zero, Quaternion.identity, parent);
-        node.transform.SetAsFirstSibling();
+        var node = BaseCompositeNode(hCompositeNode);
         float baseWidth = nodePrefab.rectTransform.sizeDelta.x * node.LayoutGroup.localScale.x;
         node.OnSubnodeChanged += ResizeNode;
-        node.InjectSequence(CustomSequence.EmptySequence());
-        node.Setup(() =>
-        {
-            QueuedSequences sequence = new();
-            for (int i = 0; i < node.subNodes.Count; i++)
-                sequence.Add(node.subNodes[i].nodeSequence);
-            return sequence;
-        });
-        for (int i = 0; i < subnodes; i++)
-        {
-            float delay = .5f + .5f * i;
-            var subnode = GenericNode(delay);
-            subnode.Text.SetText(i.ToString());
-            node.AddSubnode(subnode);
-        }
         return node;
         void ResizeNode()
         {
@@ -128,6 +98,54 @@ public class SequenceTester : MonoBehaviour
             size.x = subWidth;
             node.rectTransform.sizeDelta = size;
         }
+    }
+
+    private void CreateGenericSubnodes(CompositeNode node, int subnodes)
+    {
+        for (int i = 0; i < subnodes; i++)
+        {
+            float delay = .5f + .5f * i;
+            var subnode = GenericNode(delay);
+            subnode.Text.SetText(i.ToString());
+            node.AddSubnode(subnode);
+        }
+    }
+
+    private CompositeNode ParallelNode(int subnodes)
+    {
+        if (nodes.Count == 0) CreateSelector();
+        var node = BaseCompositeNode(vCompositeNode);
+        node.Setup(() =>
+        {
+            ParallelSequences sequence = new();
+            for (int i = 0; i < node.subNodes.Count; i++)
+                sequence.Add(node.subNodes[i].nodeSequence);
+            return sequence;
+        });
+        CreateGenericSubnodes(node, subnodes);
+        return node;
+    }
+
+    private CompositeNode QueuedNode(int subnodes)
+    {
+        if (nodes.Count == 0) CreateSelector();
+        var node = HorizontalNode();
+        node.Setup(() =>
+        {
+            QueuedSequences sequence = new();
+            for (int i = 0; i < node.subNodes.Count; i++)
+                sequence.Add(node.subNodes[i].nodeSequence);
+            return sequence;
+        });
+        CreateGenericSubnodes(node, subnodes);
+        return node;
+    }
+
+    private CompositeNode FollowUpNode()
+    {
+        var node = HorizontalNode();
+
+        return node;
     }
     #endregion
 
@@ -184,7 +202,7 @@ public class SequenceTester : MonoBehaviour
             Node currentNode = leafNodes[currentSelection];
             (leafNodes[currentSelection], leafNodes[newIndex]) = (leafNodes[newIndex], currentNode);
             node.transform.SetSiblingIndex(currentNode.transform.GetSiblingIndex());
-            CoroutineExtensions.WaitAFrame(() => SelectNode(currentNode, newIndex));
+            SelectNode(currentNode, newIndex);
             return;
         }
 
@@ -195,7 +213,7 @@ public class SequenceTester : MonoBehaviour
             if (nodesTree[^2][selectionTree[^2]] is CompositeNode parentNode)
             {
                 //still needs to check for parent of parent!!!!!!
-                parentNode.RemoveSubnode(node, parent);
+                parentNode.RemoveSubnode(node, parent.transform);
                 if (nodesTree.Count < 3)
                 {
                     nodes.Insert(selectionTree[^2] + 1, node);
@@ -213,7 +231,7 @@ public class SequenceTester : MonoBehaviour
             selectionTree.RemoveAt(selectionTree.Count - 1);
             nodesTree.RemoveAt(nodesTree.Count - 1);
             currentSelection++;
-            CoroutineExtensions.WaitAFrame(() => SelectNode(node,currentSelection));
+            SelectNode(node, currentSelection);
             return;
         }
 
@@ -235,16 +253,24 @@ public class SequenceTester : MonoBehaviour
         if (!firstNode) currentSelection--;
         nodesTree.Add(compositeNode.subNodes);
         selectionTree.Add(newIndex);
-        CoroutineExtensions.WaitAFrame(() => SelectNode(node));
+        SelectNode(node);
     }
 
     private void SelectNode(Node node, int? newIndex = null)
     {
+        if (newIndex != null) currentSelection = newIndex.Value;
+        StartCoroutine(SelectionDelay(node));
+    }
+
+    private IEnumerator SelectionDelay(Node node)
+    {
+        parent.enabled = true;
+        yield return null;
         selectorNode.transform.position = node.transform.position;
         selectorNode.rectTransform.localScale = node.transform.lossyScale * 1.5f;
         selectorNode.rectTransform.sizeDelta = node.rectTransform.sizeDelta;
-        if (newIndex != null) currentSelection = newIndex.Value;
-        CoroutineExtensions.WaitAFrame(Canvas.ForceUpdateCanvases);
+        yield return null;
+        parent.enabled = false;
     }
     #endregion
 
@@ -256,7 +282,7 @@ public class SequenceTester : MonoBehaviour
             var compositeNode = nodesTree[^2][selectionTree[^2]] as CompositeNode;
             compositeNode?.AddSubnode(node);
         }
-        CoroutineExtensions.WaitAFrame(() => SelectNode(node, leafNodes.Count - 1));
+        SelectNode(node, leafNodes.Count - 1);
     }
 
     public ISequence LogSequence(ISequence sequence)
