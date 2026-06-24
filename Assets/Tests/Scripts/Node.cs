@@ -34,7 +34,7 @@ public class Node : MonoBehaviour
         ResetNode();
     }
 
-    public ISequence InjectSequence(ISequence sequence)
+    public virtual ISequence InjectSequence(ISequence sequence)
     {
         var observer = new ObserverSequence(sequence, SetRunningColor);
         observer.OnFinished += SetFinishedColor;

@@ -37,7 +37,7 @@ public class SequenceTester : MonoBehaviour
         instance = this;
         Input.Map("UI").Action("Navigate").performed += OnNavigate;
         CreateGenericNode();
-        CreateQueuedNode(3);
+        CreateFollowUpNode();
         CreateParallelNode(2);
         CreateGenericNode();
         CoroutineExtensions.AwaitCoroutine(CoroutineExtensions.DelayCoroutine(.02f),
@@ -89,11 +89,15 @@ public class SequenceTester : MonoBehaviour
         var node = BaseCompositeNode(hCompositeNode);
         float baseWidth = nodePrefab.rectTransform.sizeDelta.x * node.LayoutGroup.localScale.x;
         node.OnSubnodeChanged += ResizeNode;
+        ResizeNode();
         return node;
         void ResizeNode()
         {
-            float subWidth = Mathf.Max(baseWidth * node.subNodes.Count, baseWidth);
-            subWidth += 110 + 10;//30 at begining, X at end
+            float subWidth = 0;
+            for (int i = 0; i < node.subNodes.Count; i++)
+                subWidth += node.subNodes[i].rectTransform.sizeDelta.x * node.LayoutGroup.localScale.x;
+            subWidth = Mathf.Max(baseWidth, subWidth);
+            subWidth += 110 + 10;
             var size = node.rectTransform.sizeDelta;
             size.x = subWidth;
             node.rectTransform.sizeDelta = size;
@@ -143,8 +147,9 @@ public class SequenceTester : MonoBehaviour
 
     private CompositeNode FollowUpNode()
     {
-        var node = HorizontalNode();
-
+        var node = BaseCompositeNode(vCompositeNode);
+        node.minNodes = 2;
+        node.Setup(() => new FollowUpSequence(node.subNodes[0].nodeSequence, node.subNodes[1].nodeSequence));
         return node;
     }
     #endregion
@@ -311,6 +316,13 @@ public class SequenceTester : MonoBehaviour
     {
         var node = instance.QueuedNode(subnodes);
         node.Text.SetText($"Q");
+        instance.AddNode(node);
+    }
+
+    public static void CreateFollowUpNode()
+    {
+        var node = instance.FollowUpNode();
+        node.Text.SetText($"F");
         instance.AddNode(node);
     }
 }

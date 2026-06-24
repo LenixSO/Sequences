@@ -9,7 +9,6 @@ public class CompositeNode : Node
     [SerializeField] private RectTransform layoutGroup;
 
     public int minNodes = 0;
-    public int maxNodes = 10;
     
     public RectTransform LayoutGroup => layoutGroup;
 
@@ -35,6 +34,14 @@ public class CompositeNode : Node
     public void Setup(Func<ISequence> nodeSequenceFactory)
     {
         sequenceConstructor = nodeSequenceFactory;
+    }
+
+    public override ISequence InjectSequence(ISequence sequence)
+    {
+        var observer = new ObserverSequence(sequence, SetRunningColor);
+        observer.OnFinished += SetFinishedColor;
+        backupSequence ??= observer;
+        return observer;
     }
 
     public void AddSubnode(Node subnode)
