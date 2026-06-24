@@ -16,6 +16,8 @@ namespace ModeCheat
         {
             "par",
             "que",
+            "loo",
+            "shi",
         };
         
         private static void AddCommand(string[] parameters)
@@ -29,6 +31,12 @@ namespace ModeCheat
                     return;
                 case "que":
                     SequenceTester.CreateQueuedNode(amount);
+                    return;
+                case "loo":
+                    SequenceTester.CreateLoopingNode(amount);
+                    return;
+                case "shi":
+                    SequenceTester.CreateShiftingNode(amount);
                     return;
                 default:
                     for (int i = 0; i <= amount; i++)
