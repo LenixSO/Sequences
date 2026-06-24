@@ -37,8 +37,8 @@ public class SequenceTester : MonoBehaviour
         instance = this;
         Input.Map("UI").Action("Navigate").performed += OnNavigate;
         CreateGenericNode();
-        CreateFollowUpNode();
-        CreateParallelNode(2);
+        CreateLoopingNode(3);
+        CreateShiftingNode(2);
         CreateGenericNode();
         CoroutineExtensions.AwaitCoroutine(CoroutineExtensions.DelayCoroutine(.02f),
             () => SelectNode(nodes[0], 0));
@@ -150,6 +150,48 @@ public class SequenceTester : MonoBehaviour
         var node = BaseCompositeNode(vCompositeNode);
         node.minNodes = 2;
         node.Setup(() => new FollowUpSequence(node.subNodes[0].nodeSequence, node.subNodes[1].nodeSequence));
+        return node;
+    }
+
+    private CompositeNode ShiftingNode(int subnodes)
+    {
+        var node = HorizontalNode();
+        ShiftingSequences sequence = new();
+        node.Setup(() =>
+        {
+            int difference = sequence.count - node.subNodes.Count;
+            if (difference > 0)
+            {
+                for (int i = 0; i < difference; i++)
+                    sequence.RemoveAt(sequence.count - 1);
+            }
+            else if (difference < 0)
+            {
+                difference = -difference;
+                for (int i = 0; i < difference; i++)
+                    sequence.Add(null);
+            }
+
+            for (int i = 0; i < sequence.count; i++)
+                sequence[i] = node.subNodes[i].nodeSequence;
+            return sequence;
+        });
+        CreateGenericSubnodes(node, subnodes);
+        return node;
+    }
+
+    private CompositeNode LoopingNode(int loops)
+    {
+        var node = HorizontalNode();
+        node.minNodes = 1;
+        node.Setup(() =>
+        {
+            ISequence sequence = node.subNodes[0].nodeSequence;
+            var delay = new CoroutineSequence(new(()=>CoroutineExtensions.DelayCoroutine(.5f)));
+            sequence = new QueuedSequences(new CustomSequence(node.subNodes[0].ResetNode), delay, sequence, delay);
+            sequence = new LoopingSequence(sequence, loops);
+            return sequence;
+        });
         return node;
     }
     #endregion
@@ -298,6 +340,7 @@ public class SequenceTester : MonoBehaviour
             .AddFinishedCallback(() => Debug.Log($"{sequence.name} finished"));
     }
 
+    #region StaticCreators
     public static void CreateGenericNode()
     {
         var node = instance.GenericNode();
@@ -325,4 +368,19 @@ public class SequenceTester : MonoBehaviour
         node.Text.SetText($"F");
         instance.AddNode(node);
     }
+
+    public static void CreateShiftingNode(int subnodes)
+    {
+        var node = instance.ShiftingNode(subnodes);
+        node.Text.SetText($"S");
+        instance.AddNode(node);
+    }
+
+    public static void CreateLoopingNode(int loops)
+    {
+        var node = instance.LoopingNode(loops);
+        node.Text.SetText($"L({loops})");
+        instance.AddNode(node);
+    }
+    #endregion
 }
