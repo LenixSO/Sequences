@@ -18,6 +18,7 @@ namespace ModeCheat
             "que",
             "loo",
             "shi",
+            "fol",
         };
         
         private static void AddCommand(string[] parameters)
@@ -28,6 +29,9 @@ namespace ModeCheat
             {
                 case "par":
                     SequenceTester.CreateParallelNode(amount);
+                    return;
+                case "fol":
+                    SequenceTester.CreateFollowUpNode();
                     return;
                 case "que":
                     SequenceTester.CreateQueuedNode(amount);
