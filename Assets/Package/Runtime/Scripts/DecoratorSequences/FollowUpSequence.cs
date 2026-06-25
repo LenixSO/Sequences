@@ -44,8 +44,8 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void End()
         {
-            sequence.End();
-            followUp.End();
+            if (sequence.running) sequence.End();
+            if (followUp.running) followUp.End();
         }
 
         /// <summary>
