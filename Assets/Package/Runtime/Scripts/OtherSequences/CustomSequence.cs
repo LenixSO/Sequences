@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LenixSO.Sequences.Decorator
+namespace LenixSO.Sequences
 {
     /// <summary>
     /// A customizable sequence of actions that allows you to specify custom begin and end actions.

@@ -11,6 +11,7 @@ namespace LenixSO.Sequences.Decorator
         private int sequenceLoops;
         
         private int currentLoop;
+        private bool ending;
 
         public LoopingSequence(ISequence loopingSequence, int loops = -1)
         {
@@ -21,6 +22,7 @@ namespace LenixSO.Sequences.Decorator
         public void Begin()
         {
             running = true;
+            ending = false;
             currentLoop = sequenceLoops;
             BeginSequence();
         }
@@ -33,7 +35,8 @@ namespace LenixSO.Sequences.Decorator
         
         public void End()
         {
-            currentLoop = 1;
+            if (sequenceLoops < 0) currentLoop = 1;
+            else ending = true;
             sequence.End();
         }
 
@@ -43,6 +46,7 @@ namespace LenixSO.Sequences.Decorator
             if (currentLoop == 0)
             {
                 running = false;
+                ending = false;
                 OnFinished?.Invoke();
                 return;
             }
