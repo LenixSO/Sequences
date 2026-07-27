@@ -26,7 +26,7 @@ namespace LenixSO.Sequences.Coroutines
         /// <param name="target">The MonoBehaviour that will host the coroutine execution.</param>
         public CoroutineSequence(ExpandedCoroutine coroutine, MonoBehaviour target = null)
         {
-            monoBehaviour = target ?? CoroutineExtensions.Holder;
+            monoBehaviour = target;
             expandedCoroutine = coroutine;
             expandedCoroutine.onEndCoroutine += OnCoroutineFinished;
         }
@@ -37,8 +37,9 @@ namespace LenixSO.Sequences.Coroutines
         public void Begin()
         {
             if (expandedCoroutine.running) return;
-            if (!monoBehaviour.gameObject.activeInHierarchy) expandedCoroutine.TriggerEndCallback();
-            else monoBehaviour.BeginCoroutine(expandedCoroutine);
+            var mono = monoBehaviour ?? CoroutineExtensions.Holder;
+            if (!mono.gameObject.activeInHierarchy) expandedCoroutine.TriggerEndCallback();
+            else mono.BeginCoroutine(expandedCoroutine);
         }
 
         /// <summary>
@@ -47,7 +48,8 @@ namespace LenixSO.Sequences.Coroutines
         public void End()
         {
             if (!expandedCoroutine.running) return;
-            monoBehaviour.EndCoroutine(expandedCoroutine);
+            var mono = monoBehaviour ?? CoroutineExtensions.Holder;
+            mono.EndCoroutine(expandedCoroutine);
         }
 
         /// <summary>
@@ -60,5 +62,4 @@ namespace LenixSO.Sequences.Coroutines
             return $"Coroutine({name})";
         }
     }
-
 }
