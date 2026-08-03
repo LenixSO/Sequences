@@ -31,6 +31,7 @@ namespace LenixSO.Sequences.Decorator
         {
             sequence.ListenNextFinishedCallback(OnSequenceEnd);
             sequence.Begin();
+            if (ending) sequence.End();
         }
         
         public void End()
