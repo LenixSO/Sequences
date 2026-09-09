@@ -81,11 +81,16 @@ namespace LenixSO.Sequences
             OnFinished?.Invoke();
         }
 
+        private static CustomSequence _customSequence;
         /// <summary>
-        /// Creates an empty sequence that does nothing when executed.
+        /// Returns an empty sequence that does nothing when executed.
         /// </summary>
-        /// <returns>A new instance of an empty sequence.</returns>
-        public static CustomSequence EmptySequence() => new(null) { name = "Empty" };
+        /// <returns>An empty sequence.</returns>
+        public static CustomSequence EmptySequence()
+        {
+            _customSequence ??= new CustomSequence(null) { name = "Empty" };
+            return _customSequence;
+        }
 
         public override string ToString()
         {
