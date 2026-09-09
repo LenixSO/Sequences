@@ -20,7 +20,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         /// <param name="sequenceCondition">A function that returns true if the sequence should run.</param>
         /// <param name="sequence">The sequence to execute if the condition is met.</param>
-        public ConditionalSequence(Func<bool> sequenceCondition, ISequence sequence)
+        public ConditionalSequence(ISequence sequence, Func<bool> sequenceCondition)
         {
             condition = sequenceCondition;
             Sequence = sequence;
