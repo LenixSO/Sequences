@@ -34,6 +34,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
+            if (running) return;
             running = true;
             sequence.ListenNextFinishedCallback(OnMainSequenceFinished);
             sequence.Begin();
@@ -44,6 +45,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void End()
         {
+            if (!running) return;
             if (sequence.running) sequence.End();
             if (followUp.running) followUp.End();
         }

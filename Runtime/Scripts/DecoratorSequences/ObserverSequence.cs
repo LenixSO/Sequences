@@ -21,6 +21,7 @@ namespace LenixSO.Sequences.Decorator
         
         public void Begin()
         {
+            if (running) return;
             running = true;
             sequence.ListenNextFinishedCallback(OnSequenceFinished);
             OnBeginCall?.Invoke();
@@ -28,6 +29,7 @@ namespace LenixSO.Sequences.Decorator
         }
         public void End()
         {
+            if (!running) return;
             OnEndCall?.Invoke();
             sequence.End();
         }

@@ -14,12 +14,14 @@ namespace LenixSO.Sequences
         
         public void Begin()
         {
+            if (running) return;
             running = true;
             if (open) End();
         }
 
         public void End()
         {
+            if (!running) return;
             running = false;
             OnFinished?.Invoke();
         }

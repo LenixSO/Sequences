@@ -12,7 +12,7 @@ namespace LenixSO.Sequences.Composite
         public bool running { get; private set; }
         private ISequence mainSequence;
         private ISequence altSequence;
-        private Func<bool> contidion;
+        private Func<bool> condidion;
         private ISequence currentSequence;
 
         /// <summary>
@@ -26,12 +26,12 @@ namespace LenixSO.Sequences.Composite
         /// </summary>
         /// <param name="main">The main sequence to execute if the condition evaluates to true.</param>
         /// <param name="alt">The alternative sequence to execute if the condition evaluates to false.</param>
-        /// <param name="contidion">The condition delegate that determines which sequence to execute.</param>
-        public BranchedSequence(ISequence main, ISequence alt, Func<bool> contidion)
+        /// <param name="condidion">The condition delegate that determines which sequence to execute.</param>
+        public BranchedSequence(ISequence main, ISequence alt, Func<bool> condidion)
         {
             mainSequence = main;
             altSequence = alt;
-            this.contidion = contidion;
+            this.condidion = condidion;
         }
 
         /// <summary>
@@ -40,8 +40,9 @@ namespace LenixSO.Sequences.Composite
         /// </summary>
         public void Begin()
         {
+            if (running) return;
             running = true;
-            currentSequence = contidion?.Invoke() ?? true ? mainSequence : altSequence;
+            currentSequence = condidion?.Invoke() ?? true ? mainSequence : altSequence;
             currentSequence.ListenNextFinishedCallback(OnSequenceEnd);
             currentSequence.Begin();
         }
@@ -63,7 +64,7 @@ namespace LenixSO.Sequences.Composite
 
         public override string ToString()
         {
-            return $"Branched({name})[{contidion?.Invoke()} ? {mainSequence} : {altSequence}";
+            return $"Branched({name})[{condidion?.Invoke()} ? {mainSequence} : {altSequence}";
         }
     }
 }

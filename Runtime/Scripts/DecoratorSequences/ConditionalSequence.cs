@@ -32,10 +32,11 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
+            if (running) return;
             running = true;
             playedSequence = condition?.Invoke() ?? true;
             if (playedSequence) Sequence?.Begin();
-            else End();
+            else Finish();
         }
 
         /// <summary>
@@ -43,6 +44,7 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void End()
         {
+            if (!running) return;
             if (playedSequence) Sequence?.End();
             else Finish();
         }

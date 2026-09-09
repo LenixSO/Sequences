@@ -22,7 +22,6 @@ namespace LenixSO.Sequences.Decorator
         {
             SetupAction = setup;
             Sequence = sequence;
-            sequence.OnFinished += Finish; // Notify when the nested sequence finishes
         }
         
         /// <summary>
@@ -30,15 +29,21 @@ namespace LenixSO.Sequences.Decorator
         /// </summary>
         public void Begin()
         {
+            if (running) return;
             running = true;
             SetupAction?.Invoke();
+            Sequence.ListenNextFinishedCallback(Finish);
             Sequence?.Begin();
         }
 
         /// <summary>
         /// Ends the nested sequence by invoking its end method.
         /// </summary>
-        public void End() => Sequence?.End();
+        public void End()
+        {
+            if (!running) return;
+            Sequence?.End();
+        }
 
         /// <summary>
         /// Invoked when the nested sequence finishes, triggers the OnFinished event.
