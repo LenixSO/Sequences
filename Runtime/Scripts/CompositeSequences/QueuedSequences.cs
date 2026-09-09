@@ -14,7 +14,7 @@ namespace LenixSO.Sequences.Composite
         private int current = 0; // Index of the current sequence being executed
         private bool skipAll; // Flag to indicate if all sequences should be skipped
         
-        public event Action OnSequenceChanged; // Action to be invoked when the current sequence changes
+        public event Action<ISequence> OnSequenceChanged; // Action to be invoked when the current sequence changes
         public event Action OnFinished; // Event triggered when all sequences have finished
 
         public bool running { get; private set; } // Indicates if the sequence manager is currently running
@@ -184,7 +184,7 @@ namespace LenixSO.Sequences.Composite
             if (animation == null) return; // Return if no sequence exists at the current index
             animation.OnFinished += GoToNext; // Subscribe to the OnFinished event of the current sequence
             animation.Begin(); // Begin the current sequence
-            OnSequenceChanged?.Invoke(); // Notify that the sequence has changed
+            OnSequenceChanged?.Invoke(animation); // Notify that the sequence has changed
             if (skipAll) animation.End(); // If skipping, immediately end the current sequence
         }
 
