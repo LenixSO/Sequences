@@ -87,6 +87,7 @@ namespace LenixSO.Sequences.Composite
         
         public void Begin()
         {
+            if (running) return;
             running = true;
             currentSequence?.ListenNextFinishedCallback(OnCurrentSequenceFinished);
             currentSequence?.Begin();
@@ -94,6 +95,7 @@ namespace LenixSO.Sequences.Composite
         
         public void End()
         {
+            if (!running) return;
             if (currentSequence == null) OnCurrentSequenceFinished();
             else currentSequence?.End();
         }
