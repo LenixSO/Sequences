@@ -16,7 +16,15 @@ namespace LenixSO.Sequences.Composite
 
         private List<ISequence> sequences = new();
         private int sequencesLeft;
-        
+
+        public int count => sequences?.Count ?? 0;
+
+        public ISequence this[int id]
+        {
+            get => sequences[id];
+            set => sequences[id] = value;
+        }
+
         /// <summary>
         /// Create a ParallelSequences with some sequences already on them
         /// </summary>
@@ -26,16 +34,7 @@ namespace LenixSO.Sequences.Composite
             for (int i = 0; i < startingSequences.Length; i++)
                 Add(startingSequences[i]);
         }
-
-        public int count => sequences?.Count ?? 0;
-        public ISequence currentSequence => sequences.Count > 0 ? sequences[0] : null;
-
-        public ISequence this[int id]
-        {
-            get => sequences[id];
-            set => sequences[id] = value;
-        }
-
+        
         /// <summary>
         /// Adds a sequence to be executed in parallel with others.
         /// </summary>
