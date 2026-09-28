@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LenixSO.Sequences.Coroutines
@@ -11,6 +12,7 @@ namespace LenixSO.Sequences.Coroutines
     public static class CoroutineExtensions
     {
         private static CoroutineHolder coroutineHolder;
+        private static Dictionary<float, WaitForSeconds> delays = new();
 
         /// <summary>
         /// Gets or creates a singleton GameObject to host coroutines when no specific MonoBehaviour is available.
@@ -109,7 +111,9 @@ namespace LenixSO.Sequences.Coroutines
 
         public static IEnumerator DelayCoroutine(float delay)
         {
-            yield return new WaitForSeconds(delay);
+            if (!delays.TryGetValue(delay, out var wait))
+                delays[delay] = wait = new WaitForSeconds(delay);
+            yield return wait;
         }
         
         public static IEnumerator DelayedCoroutine(IEnumerator coroutine, float delay)
