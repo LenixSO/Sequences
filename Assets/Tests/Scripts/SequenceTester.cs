@@ -70,7 +70,7 @@ public class SequenceTester : MonoBehaviour
         if (nodes.Count == 0) CreateSelector();
         var node = Instantiate(nodePrefab, Vector3.zero, Quaternion.identity, parent.transform);
         node.transform.SetAsFirstSibling();
-        ISequence genericSequence = new CoroutineSequence(new(() => CoroutineExtensions.DelayCoroutine(delay)));
+        ISequence genericSequence = new CoroutineSequence(() => CoroutineExtensions.DelayCoroutine(delay));
         node.InjectSequence(genericSequence);
         return node;
     }
@@ -187,7 +187,7 @@ public class SequenceTester : MonoBehaviour
         node.Setup(() =>
         {
             ISequence sequence = node.subNodes[0].nodeSequence;
-            var delay = new CoroutineSequence(new(()=>CoroutineExtensions.DelayCoroutine(.5f)));
+            var delay = new CoroutineSequence(()=>CoroutineExtensions.DelayCoroutine(.5f));
             sequence = new QueuedSequences(new CustomSequence(node.subNodes[0].ResetNode), delay, sequence, delay);
             sequence = new LoopingSequence(sequence, loops);
             return sequence;
