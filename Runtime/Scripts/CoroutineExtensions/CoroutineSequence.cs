@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace LenixSO.Sequences.Coroutines
@@ -28,6 +29,20 @@ namespace LenixSO.Sequences.Coroutines
         {
             monoBehaviour = target;
             expandedCoroutine = coroutine;
+            expandedCoroutine.onEndCoroutine += OnCoroutineFinished;
+        }
+
+        public CoroutineSequence(IEnumerator coroutine, Action onEnd = null, MonoBehaviour target = null)
+        {
+            monoBehaviour = target;
+            expandedCoroutine = new(coroutine, onEnd);
+            expandedCoroutine.onEndCoroutine += OnCoroutineFinished;
+        }
+        
+        public CoroutineSequence(Func<IEnumerator> coroutine, Action onEnd = null, MonoBehaviour target = null)
+        {
+            monoBehaviour = target;
+            expandedCoroutine = new(coroutine, onEnd);
             expandedCoroutine.onEndCoroutine += OnCoroutineFinished;
         }
 
